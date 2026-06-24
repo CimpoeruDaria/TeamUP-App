@@ -1,0 +1,28 @@
+
+@import "tailwindcss";
+
+/* Fundalul paginii */
+.bg-pagina-sport {
+  @apply flex justify-center items-center min-h-screen bg-linear-to-br from-purple-900 via-indigo-950 to-slate-900 font-sans px-4;
+}
+
+/* Cardul alb central */
+.card-login {
+  @apply bg-white/95 backdrop-blur-sm p-10 rounded-2xl shadow-2xl w-full max-w-md border border-purple-100/20;
+}
+
+/* Stilul pentru etichetele (labels) câmpurilor */
+.label-sportiv {
+  @apply block mb-1.5 text-xs font-bold uppercase tracking-wider text-purple-950;
+}
+
+/* Stilul pentru căsuțele de text (inputs) */
+.input-sportiv {
+  @apply w-full p-3.5 border border-purple-200 rounded-xl outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition duration-200 shadow-sm;
+}
+
+
+/* Butonul principal de intrare în joc */
+.buton-intrare-joc {
+  @apply w-full cursor-pointer bg-linear-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white p-4 rounded-xl font-bold text-base transition duration-300 shadow-lg hover:shadow-purple-500/20 active:scale-[0.98];
+}
