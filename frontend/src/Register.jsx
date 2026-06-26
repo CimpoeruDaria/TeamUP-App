@@ -1,63 +1,102 @@
 import React, { useState } from 'react'
 
-function Register({ onSwitchToLogin }) {
-  const [fullName, setFullName] = useState('')
+function Register({ onNavigate, onRegisterSuccess }) {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [favoriteSport, setFavoriteSport] = useState('fotbal')
   const [password, setPassword] = useState('')
+  const [age, setAge] = useState('')
+  const [location, setLocation] = useState('')
+  const [phone, setPhone] = useState('')
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
-    alert(`Cont creat cu succes pentru: ${fullName}! Now TeamUP!`)
-    onSwitchToLogin()
+
+    try {
+      // Trimitem TOATE datele într-o singură cerere curată către Python
+      const response = await fetch('http://127.0.0.1:8000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          password: password,
+          age: parseInt(age) || 0,
+          location: location,
+          phone: phone
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.status === "success") {
+        alert(data.mesaj || "Contul a fost creat cu succes! ")
+
+        const loggedInUser = {
+          id: data.user_id,
+          fullName: name,
+          location: location
+        }
+        
+        onRegisterSuccess(loggedInUser) // Trimite direct în Dashboard
+      } else {
+        alert(data.detail || "Eroare la înregistrare!")
+      }
+    } catch (error) {
+      console.error(error)
+      alert("Eroare de rețea. Asigură-te că serverul Python rulează!")
+    }
   }
 
   return (
-    <div className="card-login max-w-lg">
-      <div className="text-center mb-6">
-        <div className="inline-block bg-purple-100 text-purple-700 text-3xl p-2.5 rounded-full mb-2 shadow-inner">
-          🏃‍♂️📝🏆
-        </div>
-        <h2 className="text-purple-900 text-2xl font-black tracking-tight">Alătură-te echipei TeamUP</h2>
-        <p className="text-gray-500 text-sm mt-1">Creează-ți profilul de sportiv în 30 de secunde</p>
-      </div>
+    <div className="bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-lg border border-purple-100/20 text-left">
+      <h2 className="text-purple-950 text-4xl font-black tracking-tight text-center mb-2">Creează un cont </h2>
+      <p className="text-gray-500 text-sm text-center mb-6">Alătură-te comunității TeamUP</p>
 
       <form onSubmit={handleRegister} className="space-y-4">
-        <div>
-          <label className="label-sportiv">👤 Nume Complet</label>
-          <input type="text" placeholder="Andrei Ionescu" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="input-sportiv" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-1 ml-1">Nume Complet</label>
+            <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition text-sm" placeholder="Andrei Ionescu" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-1 ml-1">Email</label>
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition text-sm" placeholder="andrei@email.com" />
+          </div>
         </div>
 
-        <div>
-          <label className="label-sportiv">✉️ Email</label>
-          <input type="email" placeholder="andrei@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="input-sportiv" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-1 ml-1">Parolă</label>
+            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition text-sm" placeholder="••••••••" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-1 ml-1">Telefon</label>
+            <input type="text" required value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition text-sm" placeholder="07xx xxx xxx" />
+          </div>
         </div>
 
-        <div>
-          <label className="label-sportiv">🔥 Sportul tău principal</label>
-          <select value={favoriteSport} onChange={(e) => setFavoriteSport(e.target.value)} className="input-sportiv bg-white cursor-pointer">
-            <option value="fotbal">⚽ Fotbal</option>
-            <option value="baschet">🏀 Baschet</option>
-            <option value="tenis">🎾 Tenis / Padel</option>
-            <option value="volei">🏐 Volei</option>
-            <option value="altceva">⭐ Alta optiune</option>
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-1 ml-1">Vârstă</label>
+            <input type="number" required value={age} onChange={(e) => setAge(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition text-sm" placeholder="25" />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-1 ml-1">Oraș / Locație</label>
+            <input type="text" required value={location} onChange={(e) => setLocation(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition text-sm" placeholder="Bucuresti" />
+          </div>
         </div>
 
-        <div>
-          <label className="label-sportiv">🔑 Alege o Parolă</label>
-          <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="input-sportiv" />
-        </div>
-
-        <button type="submit" className="buton-intrare-joc">Creează Cont & Intră în echipă →</button>
+        <button type="submit" className="buton-intrare-joc">
+          Creează Cont și Intră în Joc →
+        </button>
       </form>
 
-      <div className="mt-6 pt-4 border-t border-gray-100 text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-gray-500 mt-6">
         Ai deja cont?{' '}
-        <button onClick={onSwitchToLogin} className="text-purple-700 hover:text-purple-900 font-bold hover:underline cursor-pointer bg-transparent border-none">
-          Conectează-te aici
+        <button onClick={() => onNavigate('login')} className="text-purple-900 font-bold hover:underline bg-transparent border-none cursor-pointer">
+          Autentifică-te
         </button>
-      </div>
+      </p>
     </div>
   )
 }
