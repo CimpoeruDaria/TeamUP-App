@@ -7,7 +7,7 @@ function ForgotPassword({ onNavigate }) {
     e.preventDefault()
 
     try {
-      // Tritem cererea de verificare către API-ul din Python
+      // tritem cererea de verificare către API-ul din Python
       const response = await fetch('http://127.0.0.1:8000/api/check-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -17,11 +17,11 @@ function ForgotPassword({ onNavigate }) {
       const data = await response.json()
 
       if (response.ok && data.status === "success") {
-        // Dacă emailul există, mergem mai departe cu simularea trimiterii link-ului
+       
         alert(`Un link de resetare a fost trimis la adresa: ${email} `)
-        onNavigate('login') // Ne întoarcem la ecranul de login
+        onNavigate('login')
       } else {
-        // Dacă serverul a întors 404 sau altă eroare, afișăm detaliul primit de la backend
+        
         alert(data.detail || "A apărut o eroare la verificarea emailului.")
       }
     } catch (error) {
