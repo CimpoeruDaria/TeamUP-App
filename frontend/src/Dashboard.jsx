@@ -12,7 +12,7 @@ function Dashboard({ onLogout, user }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false) 
 
-  // Stări pentru modalul de vizualizare participanți
+
   const [participanti, setParticipanti] = useState([])
   const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false)
 
@@ -49,7 +49,7 @@ function Dashboard({ onLogout, user }) {
     }
   }
 
-  // 🔥 FIX RADICAL: fetchMeciuri securizat împotriva blocajelor 404 și erorilor Promise.all
+
   const fetchMeciuri = async () => {
     try {
       const currentUserId = userData?.id || user?.id || 1;
@@ -178,7 +178,7 @@ function Dashboard({ onLogout, user }) {
     const dataOraMeci = new Date(`${dataMeci}T${oraMeci}`);
 
     if (dataOraMeci < dataOraCurenta) {
-      alert("⚠️ Nu poți organiza un meci în trecut!");
+      alert(" Nu poți organiza un meci în trecut!");
       return;
     }
 
@@ -479,7 +479,7 @@ function Dashboard({ onLogout, user }) {
         </div>
       )}
 
-      {/* MODAL 2: EDITARE PROFIL CONT */}
+      {/* MODAL 2: EDITARE PROFIL */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-100">
@@ -522,7 +522,7 @@ function Dashboard({ onLogout, user }) {
         </div>
       )}
 
-      {/* MODAL 3 NOU: LISTĂ PARTICIPANȚI */}
+      {/* MODAL 3: LISTĂ PARTICIPANȚI */}
       {isParticipantsModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 text-left">
@@ -531,7 +531,7 @@ function Dashboard({ onLogout, user }) {
             
             <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2">
               {participanti.length === 0 ? (
-                <p className="text-gray-400 text-sm italic text-center py-4">Încă nu s-a înscris nimeni la acest meci. 🚀</p>
+                <p className="text-gray-400 text-sm italic text-center py-4">Încă nu s-a înscris nimeni la acest meci. </p>
               ) : (
                 participanti.map((p, index) => (
                   <div key={p.id || index} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
