@@ -7,18 +7,18 @@ import './App.css'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('login')
-  const [user, setUser] = useState(null) // Aici salvăm userul logat real
+  const [user, setUser] = useState(null) // salvam userul logat
 
-  // Funcție apelată când logarea reușește
+  // functie apelata cand logarea reuseste
   const handleLoginSuccess = (userData) => {
     setUser(userData)
-    setCurrentPage('dashboard') // Trimite direct în Dashboard!
+    setCurrentPage('dashboard') // trimite in dashboard
   }
 
-  // Funcție apelată când înregistrarea reușește
+  // functie apelata cand inregistrarea reuseste
   const handleRegisterSuccess = (userData) => {
     setUser(userData)
-    setCurrentPage('dashboard') // Trimite direct în Dashboard!
+    setCurrentPage('dashboard') // trimite in dashboard
   }
 
   const handleLogout = () => {
