@@ -1,22 +1,22 @@
-import bcrypt
+import bcrypt # pt. criptarea parolelor
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware  
-from pydantic import BaseModel
-from database import get_db_connection 
+from fastapi.middleware.cors import CORSMiddleware # permite interactiunile de tip login/register 
+from pydantic import BaseModel # pt. crearea claselor
+from database import get_db_connection # pt. conexiunea cu database.py
 from datetime import datetime
 
 # Inițializare aplicație FastAPI
 app = FastAPI(title="TeamUP API")
 
-app.add_middleware(
+app.add_middleware( # pe unde trec toate cererile HTTP(login/register) din exterior
     CORSMiddleware,
     allow_origins=["*"], 
     allow_credentials=True,
-    allow_methods=["*"], 
+    allow_methods=["*"], # permite toate metodele (ex. GET, POST etc)
     allow_headers=["*"], 
 )
 
-# Structura user pentru Înregistrare
+# clasa user pentru Register
 class UserRegister(BaseModel):
     name: str
     email: str
@@ -25,35 +25,40 @@ class UserRegister(BaseModel):
     location: str
     phone: str
 
-# Macheta pentru Login
+# clasa user pentru Login
 class UserLogin(BaseModel):
     email: str
     password: str
 
-# Structura pentru user update
+# clasa pentru user update
 class UserUpdate(BaseModel):
     full_name: str
     age: int
     location: str
     phone: str
 
+
 # RUTA 1: Pagina de pornire
 @app.get("/")
 def home():
     return {"Bine ai venit pe API-ul aplicatiei TeamUP!"}
 
-# RUTA 2: Înregistrare user
+
+
+
+
+# RUTA 2: Register user
 @app.post("/api/register")
 def register_user(user_data: UserRegister):
     connection = get_db_connection()
     try:
-        with connection.cursor() as cursor:
+        with connection.cursor() as cursor: # cursorul cauta in baza de date informatiile
             cursor.execute("SELECT id FROM users WHERE email = %s", (user_data.email,))
             if cursor.fetchone():
                 raise HTTPException(status_code=400, detail="Acest email este deja inregistrat!")
 
-            parola_bytes = user_data.password.encode('utf-8')
-            sare = bcrypt.gensalt()
+            parola_bytes = user_data.password.encode('utf-8') # scrie parola initiala in biti
+            sare = bcrypt.gensalt() # valoare random (pt. ca 2 utilizatori cu ac. parola sa nu o aiba codificata la fel)
             parola_criptata = bcrypt.hashpw(parola_bytes, sare).decode('utf-8')
 
             sql = """ 
@@ -79,6 +84,9 @@ def register_user(user_data: UserRegister):
             }
     finally:
         connection.close()
+
+
+
 
 # RUTA 3: Login
 @app.post("/api/login")
@@ -110,6 +118,10 @@ def login_user(login_data: UserLogin):
     finally:
         connection.close()
 
+
+
+
+#RUTA 4: selectam toti userii din baza de date
 @app.get("/api/users")
 def read_users_from_db():
     connection = get_db_connection()
@@ -121,6 +133,10 @@ def read_users_from_db():
     finally:
         connection.close()
 
+
+
+
+#clasa pt crearea unui eveniment nou
 class MatchCreate(BaseModel):
     creator_id: int
     sport_name: str
@@ -130,6 +146,10 @@ class MatchCreate(BaseModel):
     match_time: str  
     max_players: int
 
+
+
+
+#RUTA 5: crearea unui eveniment
 @app.post("/api/matches/create")
 def create_match(match_data: MatchCreate):
     connection = get_db_connection()
@@ -155,42 +175,45 @@ def create_match(match_data: MatchCreate):
     finally:
         connection.close()
 
-# RUTA 6: Citirea tuturor meciurilor (🔥 REPARATĂ: Curățare nativă robustă bazată pe timpul serverului)
+
+
+
+# RUTA 6: Citirea tuturor meciurilor 
 @app.get("/api/matches")
 def get_all_matches(sport: str = None, city: str = None, user_city: str = None): 
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # 1. Preluăm absolut toate meciurile din DB pentru evaluare
             cursor.execute("SELECT id, match_date, match_time FROM matches")
             meciuri_existente = cursor.fetchall()
             
-            acum = datetime.now() # Ora curentă a serverului la milisecundă
+            acum = datetime.now() 
             id_uri_expirate = []
             
             for m in meciuri_existente:
                 try:
-                    # Combinăm data și ora primite de la MySQL într-un obiect datetime nativ Python
+                    
                     data_str = str(m["match_date"])
                     timp_str = str(m["match_time"])
-                    if len(timp_str) > 8: 
-                        timp_str = timp_str[-8:] # Curățăm eventualele prefixe de zile la timedelta
+                    if len(timp_str) > 8:  # asigura formatul HH:MM:SS (de 8 caractere, fara zecimi, sutimi etc)
+                        timp_str = timp_str[-8:] 
                         
                     data_ora_meci = datetime.strptime(f"{data_str} {timp_str}", "%Y-%m-%d %H:%M:%S")
-                    
+                                      
                     if data_ora_meci < acum:
                         id_uri_expirate.append(m["id"])
                 except Exception:
                     continue
 
-            # 2. Ștergem fizic meciurile identificate ca fiind în trecut
+            # sterge automat evenimentele care au inceput deja
             if id_uri_expirate:
                 format_strings = ','.join(['%s'] * len(id_uri_expirate))
                 cursor.execute(f"DELETE FROM match_participants WHERE match_id IN ({format_strings})", id_uri_expirate)
                 cursor.execute(f"DELETE FROM matches WHERE id IN ({format_strings})", id_uri_expirate)
                 connection.commit()
             
-            # 3. Rulăm interogarea standard de citire
+
+            # citeste toate meciurile active (dupa curatarea bazei de date)
             sql = """
                 SELECT id, creator_id, sport_name, location, city, match_date, match_time, max_players, available_slots 
                 FROM matches 
@@ -198,6 +221,8 @@ def get_all_matches(sport: str = None, city: str = None, user_city: str = None):
             """
             params = []
             
+
+            # sortarea meciurilor in functie de filtrele aplicate
             if sport and sport != "Toate":
                 sql += " AND sport_name = %s"
                 params.append(sport)
@@ -233,7 +258,10 @@ def get_all_matches(sport: str = None, city: str = None, user_city: str = None):
     finally:
         connection.close()
 
-# RUTA 7: Gestionare Înscriere / Retragere din Meci
+
+
+
+# RUTA 7: gestionare inscriere/retragere din meci
 @app.post("/api/matches/{match_id}/toggle-join")
 def toggle_match_join(match_id: int, payload: dict):
     action = payload.get("action")
@@ -258,7 +286,7 @@ def toggle_match_join(match_id: int, payload: dict):
             
             if action == "join":
                 if current_slots <= 0:
-                    raise HTTPException(status_code=400, detail="Meciul este deja plin! 🛑")
+                    raise HTTPException(status_code=400, detail="Meciul este deja plin! ")
                 
                 cursor.execute(
                     "INSERT INTO match_participants (match_id, user_id) VALUES (%s, %s)",
@@ -282,6 +310,11 @@ def toggle_match_join(match_id: int, payload: dict):
     finally:
         connection.close()
 
+
+
+
+
+# RUTA 8: filtrele aplicate pt cautarea meciurilor
 @app.get("/api/matches/filters")
 def get_available_filters():
     connection = get_db_connection()
@@ -300,6 +333,10 @@ def get_available_filters():
     finally:
         connection.close()
 
+
+
+
+#RUTA 9: update facut pt profilul userului
 @app.put("/api/users/{user_id}/update")
 def update_user_profile(user_id: int, user_data: UserUpdate):
     connection = get_db_connection()
@@ -328,6 +365,10 @@ def update_user_profile(user_id: int, user_data: UserUpdate):
     finally:
         connection.close()
 
+
+
+
+#RUTA 10: vedem ce participanti exista pt fiecare eveniment 
 @app.get("/api/matches/{match_id}/participants")
 def get_match_participants(match_id: int):
     connection = get_db_connection()
@@ -349,11 +390,15 @@ def get_match_participants(match_id: int):
 
             return {"participants": participants}
     except Exception as e:
-        print(f"❌ Eroare la preluarea participanților: {e}")
+        print(f" Eroare la preluarea participanților: {e}")
         raise HTTPException(status_code=500, detail="Eroare server")
     finally:
         connection.close()
 
+
+
+
+#RUTA 11: stergerea unui meci creat de user
 @app.delete("/api/matches/{match_id}")
 def delete_match(match_id: int, payload: dict):
     user_id = payload.get("user_id")
@@ -377,6 +422,10 @@ def delete_match(match_id: int, payload: dict):
     finally:
         connection.close()
 
+
+
+
+#RUTA 12: stergerea unui cont + meciurile create de acel user
 @app.delete("/api/users/{user_id}")
 def delete_user_account(user_id: int):
     connection = get_db_connection()
@@ -400,10 +449,13 @@ def delete_user_account(user_id: int):
         connection.close()
 
 
+
 class EmailCheck(BaseModel):
     email: str
 
-# RUTA NOUĂ: Verifică dacă un email există în baza de date
+
+
+# RUTA 13: Verifică dacă un email există în baza de date
 @app.post("/api/check-email")
 def check_email_exists(data: EmailCheck):
     connection = get_db_connection()
