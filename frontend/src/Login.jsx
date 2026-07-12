@@ -17,20 +17,19 @@ function Login({ onNavigate, onLoginSuccess }) {
     const data = await response.json()
 
     if (response.ok && data.status === "success") {
-      // Extragem datele reale trimise direct în obiectul `user` din Python!
+      
       const serverUser = data.user;
 
       const loggedInUser = {
         id: serverUser.id,
         fullName: serverUser.name,
-        favoriteSport: serverUser.favorite_sport, // Vine din noul tău JSON din Python
-        level: serverUser.skill_level             // Vine direct din tabela users (Beginner/Intermediate/Advanced)
+        favoriteSport: serverUser.favorite_sport, 
+        level: serverUser.skill_level             
       }
-      
-      // Trimitem datele reale și deschidem Dashboard-ul instant (FĂRĂ ALERT!)
+        
       onLoginSuccess(loggedInUser) 
     } else {
-      // Intră aici doar dacă response.ok este false (ex: status 400 de la FastAPI)
+      
       alert(data.detail || "Email sau parolă incorectă!")
     }
   } catch (error) {
