@@ -12,7 +12,6 @@ function Register({ onNavigate, onRegisterSuccess }) {
     e.preventDefault()
 
     try {
-      // Trimitem TOATE datele într-o singură cerere curată către Python
       const response = await fetch('http://127.0.0.1:8000/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,7 +36,7 @@ function Register({ onNavigate, onRegisterSuccess }) {
           location: location
         }
         
-        onRegisterSuccess(loggedInUser) // Trimite direct în Dashboard
+        onRegisterSuccess(loggedInUser) 
       } else {
         alert(data.detail || "Eroare la înregistrare!")
       }
